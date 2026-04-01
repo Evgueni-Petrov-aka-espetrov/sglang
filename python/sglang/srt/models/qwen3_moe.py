@@ -1192,7 +1192,7 @@ class Qwen3MoeForCausalLM(nn.Module):
                         self.model.layers[layer_id].mlp, Qwen3MoeSparseMoeBlock
                     )
                 }
-            )
+            ).value
 
     @classmethod
     def get_model_config_for_expert_location(cls, config):
