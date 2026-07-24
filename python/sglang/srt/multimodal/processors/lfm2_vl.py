@@ -12,9 +12,9 @@
 # limitations under the License.
 """Multimodal processor for LFM2-VL models with SigLip2 NaFlex support."""
 
-from typing import Any, Dict, List, Optional, Union
+from typing import List, Union
 
-from sglang.srt.managers.schedule_batch import Modality
+from sglang.srt.managers.schedule_batch import Modality, MultimodalProcessorOutput
 from sglang.srt.models.lfm2_vl import Lfm2VlForConditionalGeneration
 from sglang.srt.multimodal.processors.base_processor import (
     BaseMultimodalProcessor as SGLangBaseProcessor,
@@ -32,6 +32,7 @@ class Lfm2VlImageProcessor(SGLangBaseProcessor):
     """
 
     models = [Lfm2VlForConditionalGeneration]
+    gpu_image_decode = False
 
     def __init__(self, hf_config, server_args, _processor, *args, **kwargs):
         super().__init__(hf_config, server_args, _processor, *args, **kwargs)
@@ -56,7 +57,7 @@ class Lfm2VlImageProcessor(SGLangBaseProcessor):
         input_text: str,
         request_obj,
         **kwargs,
-    ) -> Optional[Dict[str, Any]]:
+    ):
         if not image_data:
             input_ids = self._tokenizer(
                 input_text, return_tensors="pt", add_special_tokens=False
@@ -67,7 +68,7 @@ class Lfm2VlImageProcessor(SGLangBaseProcessor):
                 "im_token_id": self.IMAGE_TOKEN_ID,
             }
 
-        base_output = self.load_mm_data(
+        base_output = await self.load_mm_data(
             prompt=input_text,
             image_data=image_data,
             multimodal_tokens=self.mm_tokens,
@@ -77,8 +78,8 @@ class Lfm2VlImageProcessor(SGLangBaseProcessor):
             base_output, self.mm_tokens
         )
 
-        return {
-            "input_ids": input_ids.tolist(),
-            "mm_items": mm_items,
-            "im_token_id": self.IMAGE_TOKEN_ID,
-        }
+        return MultimodalProcessorOutput(
+            input_ids=input_ids.tolist(),
+            mm_items=mm_items,
+            im_token_id=self.IMAGE_TOKEN_ID,
+        )

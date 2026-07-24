@@ -78,6 +78,9 @@ def get_is_diffusion_model(model_path: str) -> bool:
     if is_known_non_diffusers_diffusion_model(model_path):
         return True
 
+    if _is_registered_diffusion_model(model_path):
+        return True
+
     try:
         if envs.SGLANG_USE_MODELSCOPE.get():
             from modelscope import model_file_download
@@ -100,11 +103,11 @@ def get_model_path(extra_argv):
     # Find the model_path argument
     model_path = None
     for i, arg in enumerate(extra_argv):
-        if arg == "--model-path":
+        if arg in ("--model-path", "--model"):
             if i + 1 < len(extra_argv):
                 model_path = extra_argv[i + 1]
                 break
-        elif arg.startswith("--model-path="):
+        elif arg.startswith("--model-path=") or arg.startswith("--model="):
             model_path = arg.split("=", 1)[1]
             break
 
